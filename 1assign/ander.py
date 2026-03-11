@@ -6,8 +6,12 @@ from torch.utils.data import DataLoader, TensorDataset
 
 import numpy as np
 import pandas as pd
+
+import webview
 import seaborn as sns
+import plotly.express as px
 import matplotlib.pyplot as plt
+
 
 from sklearn.model_selection import train_test_split
 
@@ -15,7 +19,8 @@ from sklearn.model_selection import train_test_split
 # CONFIGS
 csv_path: str = "./data/insurance.csv"
 device: str = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
-show_plots: bool = False
+show_plots: bool = True
+train_model: bool = False
 batch_size: int = 32
 epochs: int = 30
 lr: float = 1e-3
@@ -35,6 +40,10 @@ raw_df.info()
 print()
 print(raw_df.nunique())
 print()
+
+categorical_cols = ["sex", "smoker", "region"]
+for category in categorical_cols:
+    raw_df[category] = pd.Categorical(raw_df[category])
 
 df: pd.DataFrame = pd.get_dummies(raw_df, drop_first=True, dtype=int)
 print(df.head())
@@ -83,12 +92,18 @@ if show_plots:
     print("# EXPLORATORY DATA ANALYSIS")
     visualize_distributions(df, raw_df)
 
-    sns.scatterplot(
-        data=df, x="age", y="charges",
-        hue="smoker_yes", alpha=0.5, palette="Set1"
+    fig = px.scatter_matrix(
+        raw_df,
+        dimensions=["age", "bmi", "charges"],
+        color="smoker",
+        symbol="sex",
+        opacity=0.25,
+        title="Insurance Data: Numerical Correlations",
+        labels={col: col.replace('_', ' ').title() for col in raw_df.columns}
     )
-    plt.tight_layout()
-    plt.show()
+    fig.update_traces(diagonal_visible=False, showupperhalf=False)
+    # se abre en localhost
+    # fig.show()
 
 # DATA PREPARATION
 def split_data(
@@ -191,8 +206,9 @@ def test(
 
     print(f"Test Error: \n Avg loss: {test_loss:8f}\n")
 
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train(train_loader, model, loss_fn, optimizer)
-    test(test_loader, model, loss_fn)
-print("Done!")
+if train_model:
+    for t in range(epochs):
+        print(f"Epoch {t+1}\n-------------------------------")
+        train(train_loader, model, loss_fn, optimizer)
+        test(test_loader, model, loss_fn)
+    print("Done!")
