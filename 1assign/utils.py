@@ -1,61 +1,26 @@
 
-# LIBRARIES
-import torch
-import torch.nn as nn
-from torch.optim.lr_scheduler import StepLR
-from torchmetrics import NormalizedRootMeanSquaredError, MeanAbsoluteError, MeanAbsolutePercentageError
-from torch.utils.data import DataLoader, TensorDataset
-from torch.utils.tensorboard import SummaryWriter
+from config import Config
 
 import numpy as np
 import pandas as pd
-
 import seaborn as sns
 import matplotlib.pyplot as plt
 
 import optuna
 
+import torch
+import torch.nn as nn
+from torch.utils.tensorboard import SummaryWriter
+from torch.optim.lr_scheduler import StepLR
+from torch.utils.data import DataLoader, TensorDataset
+from torchmetrics import NormalizedRootMeanSquaredError, MeanAbsoluteError, MeanAbsolutePercentageError
+
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 
-# CONFIGS
-csv_path: str = "./data/insurance.csv"
-device: str = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
-show_plots: bool = True
-train_model: bool = True
-optimize_hyperparms: bool = True
-batch_size: int = 32
-epochs: int = 120
-lr: float = 5e-4
-writer = SummaryWriter("runs/insurance")
 
-random_seed: int = 42
-torch.manual_seed(random_seed)
-np.random.seed(random_seed)
-
-print("# DATA COLLECTION")
-df: pd.DataFrame = pd.read_csv(csv_path)
-print(df.head())
-
-print("\n")
-
-print("# PREPROCESSING")
-df.info()
-print()
-print(df.nunique())
-print()
-
-categorical_cols = ["sex", "smoker", "region"]
-for category in categorical_cols:
-    df[category] = pd.Categorical(df[category])
-
-# df: pd.DataFrame = pd.get_dummies(df, drop_first=False, dtype=int)
-print(df.head())
-print()
-df.info()
-print()
-
+# DATA VISUALIZATION
 def visualize_distributions(
         df: pd.DataFrame
         ) -> None:
@@ -91,25 +56,19 @@ def visualize_distributions(
     
     sns.set_theme(style="ticks")
 
-    # Create the plot
     g = sns.pairplot(
         df, 
         vars=["age", "bmi", "charges"], 
         hue="smoker", 
-        markers=["o", "s"], # Circle for one sex, Square for the other
+        markers=["o", "s"],
         plot_kws={'alpha': 0.25}, 
-        corner=True # This handles the 'showupperhalf=False' equivalent
+        corner=True
     )
 
     g.figure.suptitle("Insurance Data: Numerical Correlations", y=1.02)
 
     plt.tight_layout()
     plt.show()
-
-if show_plots:
-    print("# EXPLORATORY DATA ANALYSIS")
-    visualize_distributions(df)
-
 
 # DATA PREPARATION
 def split_data(
@@ -160,47 +119,13 @@ def split_data(
 
     return train_loader, test_loader, val_loader, x_scaler, y_scaler
 
-train_loader, test_loader, val_loader, x_scaler, y_scaler = split_data(df, batch_size=batch_size)
-for X, y in train_loader:
-    print(f"Shape of X [N, C, H, W]: {X.shape}")
-    print(f"Shape of y: {y.shape} {y.dtype}")
-    break
-
-# MODEL DEFINITION
-class InsuranceModel(nn.Module):
-    def __init__(self):
-        super().__init__()
-
-        self.layers = nn.Sequential(
-            nn.Linear(11, 64),
-            nn.ReLU(),
-
-            nn.Dropout(0.1),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-
-            nn.Dropout(0.1),
-            nn.Linear(32, 16),
-            nn.ReLU(),
-
-            nn.Linear(16, 1)
-        )
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.layers(x)
-
-model = InsuranceModel().to(device)
-loss_fn = nn.L1Loss()
-# loss_fn = nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-# scheduler = StepLR(optimizer, step_size=20, gamma=0.005)
-
 # TRAINING
 def train(
         dataloader: DataLoader,
         model: nn.Module,
         loss_fn: nn.Module, 
         optimizer: torch.optim.Optimizer,
+        device: str,
         writer: SummaryWriter,
         epoch: int,
         scheduler: StepLR = None
@@ -229,23 +154,25 @@ def train(
     if scheduler:
         scheduler.step()
 
+
 # TESTING
 def test(
         dataloader: DataLoader,
         model: nn.Module,
         loss_fn: nn.Module,
         y_scaler: StandardScaler,
+        device: str,
         writer: SummaryWriter,
         epoch: int
         ) -> None:
     model.eval()
-    
-    nrmse = NormalizedRootMeanSquaredError().to(device)
-    mae = MeanAbsoluteError().to(device)
-    mape = MeanAbsolutePercentageError().to(device)
 
     test_loss = 0
     with torch.no_grad():
+        nrmse = NormalizedRootMeanSquaredError().to(device)
+        mae = MeanAbsoluteError().to(device)
+        mape = MeanAbsolutePercentageError().to(device)
+
         for X, y in dataloader:
             X, y = X.to(device), y.to(device)
             pred = model(X) 
@@ -273,15 +200,15 @@ def test(
     writer.add_scalar("Test/MAPE", epoch_mape, epoch)
 
     print(f"Test Error: \n Avg loss: {test_loss:8f}\n Avg MAPE: {epoch_mape:8f}\n")
-    mape.reset()
 
+# VALIDATION
 def validate(
         dataloader: DataLoader,
         model: nn.Module,
         loss_fn: nn.Module,
+        device:str, 
         writer: SummaryWriter,
-        epoch: int,
-        n_trial: int
+        epoch: int
         ) -> None:
     model.eval()
     val_loss = 0
@@ -297,66 +224,29 @@ def validate(
     print(f"Validation Loss: {val_loss:8f}\n")
     return val_loss
 
+# HYPERPARAM OPTIMIZATION
+def make_objective(train_loader, val_loader, loss_fn):
+    def objective(trial):
+        config = Config()
+        model_name = trial.suggest_categorical("model", list(config.models.keys()))
+        lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
 
-def objective(trial):
-    trial_writer = SummaryWriter(f"runs/insurance/trial_{trial.number}")
-    # 1. Suggest hyperparameters
-    n_layers = trial.suggest_int("n_layers", 1, 4) # 5 might be overkill for this data
-    lr = trial.suggest_float("lr", 1e-4, 1e-2, log=True)
+        trial_writer = SummaryWriter(f"runs/insurance/trial_{trial.number}_{model_name}")
+        model = config.models[model_name]().to(config.device)
+        optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
+        n_epochs = 200
+        val_loss = float("inf")
+
+        for t in range(n_epochs):
+            train(train_loader, model, loss_fn, optimizer, config.device, trial_writer, t)
+            val_loss = validate(val_loader, model, loss_fn, config.device, trial_writer, t)
+
+            trial.report(val_loss, t)
+            if trial.should_prune():
+                raise optuna.exceptions.TrialPruned()
+            
+        trial_writer.close()
+        return val_loss
     
-    layers = []
-    in_features = 11
-    for i in range(n_layers):
-        out_features = trial.suggest_int(f"n_units_l{i}", 16, 128)
-        layers.append(nn.Linear(in_features, out_features))
-        layers.append(nn.ReLU())
-        layers.append(nn.Dropout(0.1)) # Lower dropout often helps on small data
-        in_features = out_features
-    layers.append(nn.Linear(in_features, 1))
-    
-    model = nn.Sequential(*layers).to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    
-    # 2. Single Training & Validation Loop
-    num_search_epochs = 20 # Keep this consistent
-    for t in range(num_search_epochs):
-        train(train_loader, model, loss_fn, optimizer, trial_writer, t)
-        
-        # We use validation loss to decide if this hyperparam set is good
-        val_loss = validate(val_loader, model, loss_fn, trial_writer, t, n_trial=trial.number)
-        
-        # 3. Pruning (The "Secret Sauce")
-        trial.report(val_loss, t)
-        if trial.should_prune():
-            raise optuna.exceptions.TrialPruned()
-
-    return val_loss # Return the last epoch's validation loss
-
-if train_model:
-    for t in range(epochs):
-        print(f"Epoch {t+1}\n-------------------------------")
-        train(train_loader, model, loss_fn, optimizer, writer, t)
-        test(test_loader, model, loss_fn, y_scaler, writer, t)
-        validate(val_loader, model, loss_fn, writer, t, n_trial=-1)
-    print("Done!")
-
-##############################################################################################
-
-# 4. Run the study
-if optimize_hyperparms:
-    study = optuna.create_study(direction="minimize")
-    study.optimize(objective, n_trials=20)
-
-    complete_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
-    top_trials = sorted(complete_trials, key=lambda t: t.value)[:20]
-
-    print(f"{'Rank':<5} | {'Trial':<5} | {'Value':<10} | {'Params'}")
-    print("-" * 50)
-
-    for i, trial in enumerate(top_trials):
-        print(f"{i+1:<5} | {trial.number:<5} | {trial.value:<10.4f} | {trial.params}")
-
-# IMPROVEMENTS:
-## log transformation
-## train test val split -> cambiar porcentajes
-## learning rate variable
+    return objective
