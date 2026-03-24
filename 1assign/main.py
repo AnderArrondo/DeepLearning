@@ -86,6 +86,10 @@ def main():
         best_model = config.models[config.best_model]()
         best_lr = config.lr
 
+# probar otros optimizers o buscar parametros de adam
+# parameter importance optuna
+# paralelizacion optuna
+# buscar pruner
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 
+import random
 import torch
 import numpy as np
 
@@ -41,5 +42,6 @@ class Config:
         }
         self.best_model = "model4"
 
+        random.seed(self.random_seed)
         torch.manual_seed(self.random_seed)
         np.random.seed(self.random_seed)
