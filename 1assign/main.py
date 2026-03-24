@@ -52,12 +52,29 @@ def main():
 
         print(f"\n{"Rank":<5} | {"Trial":<6} | {"Value":<10} | {"Model":<10} | {"LR":<10} | {'Epochs':<6}")
         print("-" * 65)
+        
+        ranking=[]
+        trial_num=[]
+        trial_val=[]
+        trial_model=[]
+        trial_lr=[]
         for i, trial in enumerate(top_trials):
+            ranking.append(i+1)
+            trial_num.append(trial.number)
+            trial_val.append(trial.value)
+            trial_model.append(trial.params["model"])
+            trial_lr.append(trial.params["lr"])
             print(
                 f"{i+1:<5} | {trial.number:<6} | {trial.value:<10.4f} | "
                 f"{trial.params["model"]:<10} | {trial.params["lr"]:<10.6f} | {trial.last_step:<6}"
             )
-
+        top_trials_df=pd.DataFrame({
+            "ranking":ranking,
+            "trial_num":trial_num,
+            "trial_val":trial_val,
+            "trial_model": trial_model,
+            "trial_lr":trial_lr
+        })
         # BEST TRIAL SUMMARY
         best = study.best_trial
         print(f"\nBest trial: #{best.number}")
@@ -81,10 +98,23 @@ def main():
         print(f"LR (weighted mean):     {weighted_mean_lr:.6f}")
         print(f"Epochs (weighted mean): {weighted_mean_epochs:.1f}")
 
+    top_trials_df["loss_inverse"] = 1/top_trials_df["trial_val"]
+
+    #DEFINE BEST MODEL
+    model_ranking=top_trials_df\
+        .groupby("trial_model")\
+        .apply(weighted_stats)\
+        .sort_values(by=["avg_loss"])
+    #print(model_ranking)
+
+    config.best_model=model_ranking["model"].iloc[0]
+    config.best_lr=model_ranking["avg_lr"].iloc[0]
+    
     if config.train_model:
         print("# BEST MODEL PERFORMANCE")
-        best_model = config.models[config.best_model]()
-        best_lr = config.lr
+        best_model = config.best_model
+        best_lr = config.best_lr
+        print(f"MODEL:{best_model}||| LR:{best_lr}")
 
 # probar otros optimizers o buscar parametros de adam
 # parameter importance optuna

@@ -250,3 +250,11 @@ def make_objective(train_loader, val_loader, loss_fn):
         return val_loss
     
     return objective
+
+def weighted_stats(group):
+    d={}
+    d["model"] = group.name
+    d["avg_lr"]=np.average(group["trial_lr"], weights=group["loss_inverse"])
+    d["avg_loss"]=np.average(group["trial_val"], weights=group["loss_inverse"])
+
+    return pd.Series(d)
