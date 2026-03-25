@@ -2,6 +2,9 @@
 from utils import *
 from config import Config
 from models import InsuranceModel4
+from datetime import datetime
+
+import torch.optim as optim
 
 def main():
     config = Config()
@@ -37,7 +40,6 @@ def main():
         print(f"Shape of y: {y.shape} {y.dtype}")
         break
 
-    loss_fn = nn.L1Loss()
     # loss_fn = nn.MSELoss()
     # scheduler = StepLR(optimizer, step_size=20, gamma=0.005)
 
@@ -45,7 +47,7 @@ def main():
         print("# HYPERPARAMETER OPTIMIZATION")
         sampler = optuna.samplers.TPESampler(seed=config.random_seed)
         study = optuna.create_study(direction="minimize", sampler=sampler)
-        study.optimize(make_objective(train_loader, val_loader, loss_fn), n_trials=config.val_trials) # TODO: params de make_objective
+        study.optimize(make_objective(train_loader, val_loader, config.loss_fn), n_trials=config.val_trials) # TODO: params de make_objective
 
         complete_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
         top_trials = sorted(complete_trials, key=lambda t: t.value)[:config.val_trials]
@@ -97,11 +99,12 @@ def main():
 
         print(f"LR (weighted mean):     {weighted_mean_lr:.6f}")
         print(f"Epochs (weighted mean): {weighted_mean_epochs:.1f}")
+        config.top_trials_df=top_trials_df
 
     top_trials_df["loss_inverse"] = 1/top_trials_df["trial_val"]
 
     #DEFINE BEST MODEL
-    model_ranking=top_trials_df\
+    model_ranking=config.top_trials_df\
         .groupby("trial_model")\
         .apply(weighted_stats)\
         .sort_values(by=["avg_loss"])
@@ -112,9 +115,42 @@ def main():
     
     if config.train_model:
         print("# BEST MODEL PERFORMANCE")
-        best_model = config.best_model
+        best_model: nn.Module = config.models[config.best_model]()#Returns model
+        best_model.to(config.device)
         best_lr = config.best_lr
-        print(f"MODEL:{best_model}||| LR:{best_lr}")
+        #print(f"MODEL:{best_model}||| LR:{best_lr}")
+        best_model_optimizer=optim.Adam(best_model.parameters(), lr=best_lr)
+        timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+        best_model_writer_train = SummaryWriter(f"runs/insurance_best/{timestamp}/train/{config.best_model}")
+        train(train_loader,
+              best_model,
+              config.loss_fn,
+              best_model_optimizer,
+              config.device,
+              best_model_writer_train,
+              config.epochs)
+        
+        checkpoint={
+            "model_key": config.best_model,
+            "model": best_model.state_dict(),
+            "lr":config.best_lr
+        }
+        config.model_path=f"models/best_model_({config.best_model}_{timestamp}).pth"
+        torch.save(checkpoint, config.model_path)
+    
+    if config.test_model:
+        model_key,model_data,test_lr=load_model(config.model_path)
+        test_model: nn.Module=config.models[model_key]()
+        test_model.load_state_dict(model_data)
+        best_model_writer_test = SummaryWriter(f"runs/insurance_best/{timestamp}/test/{model_key}")
+
+        test(test_loader,
+            test_model,
+            config.loss_fn,
+            y_scaler,
+            config.device,
+            best_model_writer_test,
+            config.epochs)
 
 # probar otros optimizers o buscar parametros de adam
 # parameter importance optuna

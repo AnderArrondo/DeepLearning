@@ -128,7 +128,7 @@ def train(
         device: str,
         writer: SummaryWriter,
         epoch: int,
-        scheduler: StepLR = None
+        #scheduler: StepLR = None
         ) -> None:
     size = len(dataloader.dataset)
     model.train()
@@ -141,7 +141,7 @@ def train(
 
         global_step = epoch * len(dataloader) + batch
 
-        writer.add_scalar("Train/Loss", loss.item(), global_step)
+        writer.add_scalar(f"Train/Loss", loss.item(), global_step)
 
         optimizer.zero_grad()
         loss.backward()
@@ -151,8 +151,8 @@ def train(
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
     
-    if scheduler:
-        scheduler.step()
+    # if scheduler:
+    #     scheduler.step()
 
 
 # TESTING
@@ -166,6 +166,7 @@ def test(
         epoch: int
         ) -> None:
     model.eval()
+    config = Config()
 
     test_loss = 0
     with torch.no_grad():
@@ -194,10 +195,10 @@ def test(
     epoch_mae = mae.compute()
     epoch_mape = mape.compute()
 
-    writer.add_scalar("Test/Loss", test_loss, epoch)
-    writer.add_scalar("Test/NRMSE", epoch_nrmse, epoch)
-    writer.add_scalar("Test/MAE", epoch_mae, epoch)
-    writer.add_scalar("Test/MAPE", epoch_mape, epoch)
+    writer.add_scalar("Test/Loss", test_loss, 0)
+    writer.add_scalar("Test/NRMSE", epoch_nrmse, 0)
+    writer.add_scalar("Test/MAE", epoch_mae, 0)
+    writer.add_scalar("Test/MAPE", epoch_mape, 0)
 
     print(f"Test Error: \n Avg loss: {test_loss:8f}\n Avg MAPE: {epoch_mape:8f}\n")
 
@@ -258,3 +259,10 @@ def weighted_stats(group):
     d["avg_loss"]=np.average(group["trial_val"], weights=group["loss_inverse"])
 
     return pd.Series(d)
+
+def load_model(path):
+    check=torch.load(path,weights_only=False)#SINO FALA
+    model_key=check["model_key"]
+    model=check["model"]
+    lr=check["lr"]
+    return model_key,model,lr
