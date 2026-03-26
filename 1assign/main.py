@@ -143,7 +143,7 @@ def main():
         torch.save(checkpoint, config.model_path)
     
     if config.test_model:
-        model_key,model_data,test_lr=load_model(config.model_path)
+        model_key, model_data, _ = load_model(config.model_path)
         test_model: nn.Module=config.models[model_key]()
         test_model.load_state_dict(model_data)
         test_model.to(config.device)
