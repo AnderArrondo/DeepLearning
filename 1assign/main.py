@@ -3,6 +3,7 @@ from utils import *
 from config import Config
 from models import InsuranceModel4
 from datetime import datetime
+from optuna.visualization import plot_param_importances
 
 import torch.optim as optim
 
@@ -107,6 +108,12 @@ def main():
         print(f"LR (weighted mean):     {weighted_mean_lr:.6f}")
         print(f"Epochs (weighted mean): {weighted_mean_epochs:.1f}")
         config.top_trials_df=top_trials_df
+
+        try:
+            fig = plot_param_importances(study)
+            fig.write_image("param_importance_plot.png")
+        except Exception as e:
+            pass
 
     top_trials_df["loss_inverse"] = 1/top_trials_df["trial_val"]
 
