@@ -42,6 +42,13 @@ def main():
 
     # loss_fn = nn.MSELoss()
     # scheduler = StepLR(optimizer, step_size=20, gamma=0.005)
+    config.custom_name=input("Introduce a name for the save(Empty for default):")
+    if config.custom_name=="":
+        config.model_path=f"models/best_model_({config.best_model}_{config.timestamp}).pth"
+    else:
+        config.model_path=f"models/{config.custom_name}.pth"
+        config.writer=SummaryWriter(f"runs/insurance_best/{config.custom_name}")
+
 
     if config.optimize_hyperparams:
         print("# HYPERPARAMETER OPTIMIZATION")
@@ -120,14 +127,12 @@ def main():
         best_lr = config.best_lr
         #print(f"MODEL:{best_model}||| LR:{best_lr}")
         best_model_optimizer=optim.Adam(best_model.parameters(), lr=best_lr)
-        timestamp = datetime.now().strftime("%Y%m%d-%H%M")
-        best_model_writer_train = SummaryWriter(f"runs/insurance_best/{timestamp}/train/{config.best_model}")
         train(train_loader,
               best_model,
               config.loss_fn,
               best_model_optimizer,
               config.device,
-              best_model_writer_train,
+              config.writer,
               config.epochs)
         
         checkpoint={
@@ -135,21 +140,20 @@ def main():
             "model": best_model.state_dict(),
             "lr":config.best_lr
         }
-        config.model_path=f"models/best_model_({config.best_model}_{timestamp}).pth"
         torch.save(checkpoint, config.model_path)
     
     if config.test_model:
         model_key,model_data,test_lr=load_model(config.model_path)
         test_model: nn.Module=config.models[model_key]()
         test_model.load_state_dict(model_data)
-        best_model_writer_test = SummaryWriter(f"runs/insurance_best/{timestamp}/test/{model_key}")
+        test_model.to(config.device)
 
         test(test_loader,
             test_model,
             config.loss_fn,
             y_scaler,
             config.device,
-            best_model_writer_test,
+            config.writer,
             config.epochs)
 
 # probar otros optimizers o buscar parametros de adam

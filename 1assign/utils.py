@@ -139,7 +139,7 @@ def train(
         pred = model(X)
         loss = loss_fn(pred, y)
 
-        global_step = epoch * len(dataloader) + batch
+        global_step = current = batch * dataloader.batch_size + len(X)#Se supone que asi es mejor
 
         writer.add_scalar(f"Train/Loss", loss.item(), global_step)
 

@@ -6,6 +6,10 @@ import pandas as pd
 
 from models import *
 
+from datetime import datetime
+from torch.utils.tensorboard import SummaryWriter
+
+
 
 class Config:
     _instance = None
@@ -23,10 +27,10 @@ class Config:
         self.test_model: bool = True
         self.optimize_hyperparams: bool = True
         self.batch_size: int  = 32
-        self.epochs: int  = 500
+        self.epochs: int  =  1000
         self.lr: float= 6e-3
         self.random_seed: int  = 42
-        self.val_trials: int = 500
+        self.val_trials: int = 1000000
 
         self.device: str = (
             torch.accelerator.current_accelerator().type
@@ -43,10 +47,15 @@ class Config:
             "model6": InsuranceModel6
         }
         self.loss_fn=nn.L1Loss()
-        self.best_model = "model4"
+        self.best_model = "model2"
         self.best_lr=0.001
         self.model_path=""
         self.top_trials_df=pd.DataFrame()
+        self.timestamp = datetime.now().strftime("%Y%m%d-%H%M")
+        self.custom_name=""
+        self.writer=SummaryWriter(f"runs/insurance_best/{self.timestamp}/{self.best_model}")
+        if self.custom_name!="":
+            self.writer=SummaryWriter(f"runs/insurance_best/{self.custom_name}")
 
         random.seed(self.random_seed)
         torch.manual_seed(self.random_seed)
