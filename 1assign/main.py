@@ -2,12 +2,12 @@
 from utils import *
 from config import Config
 from models import InsuranceModel4
-from datetime import datetime
 from optuna.visualization import plot_param_importances
 
 import torch.optim as optim
 
 def main():
+    plot_printed=False
     config = Config()
 
     print("# DATA COLLECTION")
@@ -54,7 +54,7 @@ def main():
     if config.optimize_hyperparams:
         print("# HYPERPARAMETER OPTIMIZATION")
         sampler = optuna.samplers.TPESampler(seed=config.random_seed)
-        study = optuna.create_study(direction="minimize", sampler=sampler)
+        study = optuna.create_study(direction="minimize", sampler=sampler,study_name=config.custom_name)
         study.optimize(make_objective(train_loader, val_loader, config.loss_fn), n_trials=config.val_trials) # TODO: params de make_objective
 
         complete_trials = [t for t in study.trials if t.state == optuna.trial.TrialState.COMPLETE]
@@ -112,8 +112,9 @@ def main():
         try:
             fig = plot_param_importances(study)
             fig.write_image("param_importance_plot.png")
+            plot_printed=True
         except Exception as e:
-            pass
+            plot_printed=e
 
     top_trials_df["loss_inverse"] = 1/top_trials_df["trial_val"]
 
@@ -162,6 +163,8 @@ def main():
             config.device,
             config.writer,
             config.epochs)
+        
+    print(f"Plot printed:{plot_printed}")
 
 # probar otros optimizers o buscar parametros de adam
 # parameter importance optuna
