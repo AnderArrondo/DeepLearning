@@ -1368,8 +1368,6 @@ wheels = [
 ]
 
 [[package]]
-<<<<<<< HEAD
-=======
 name = "plotly"
 version = "6.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1383,7 +1381,6 @@ wheels = [
 ]
 
 [[package]]
->>>>>>> 287fd2420e05303d1ad938668f96b08f6a803374
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
