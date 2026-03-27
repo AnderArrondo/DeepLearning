@@ -147,7 +147,7 @@ def train(
         loss.backward()
         optimizer.step()
 
-        if batch % 15 == 0:
+        if batch %20 == 0 and epoch%100==0:
             loss, current = loss.item(), (batch + 1) * len(X)
             print(f"loss: {loss:>7f} [{current:>5d}/{size:>5d}]")
     
@@ -222,7 +222,6 @@ def validate(
     val_loss /= len(dataloader)
 
     writer.add_scalar(f"Validation/Loss", val_loss, epoch)
-    print(f"Validation Loss: {val_loss:8f}\n")
     return val_loss
 
 # HYPERPARAM OPTIMIZATION
@@ -236,12 +235,16 @@ def make_objective(train_loader, val_loader, loss_fn):
         model = config.models[model_name]().to(config.device)
         optimizer = torch.optim.Adam(model.parameters(), lr=lr)
 
-        n_epochs = 200
+        n_epochs = config.epochs
         val_loss = float("inf")
 
         for t in range(n_epochs):
-            train(train_loader, model, loss_fn, optimizer, config.device, trial_writer, t)
+            train(train_loader, model, loss_fn, optimizer, config.device, trial_writer,epoch=t)
             val_loss = validate(val_loader, model, loss_fn, config.device, trial_writer, t)
+            if t%100==0:
+                print(f"Trial: {trial.number}")
+                print(f"Validation Loss: {val_loss:8f}\n")
+
 
             trial.report(val_loss, t)
             if trial.should_prune():
