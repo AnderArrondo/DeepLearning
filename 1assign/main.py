@@ -3,6 +3,7 @@ from utils import *
 from config import Config
 from models import InsuranceModel4
 from datetime import datetime
+from optuna.visualization import plot_param_importances
 
 import torch.optim as optim
 
@@ -108,6 +109,12 @@ def main():
         print(f"Epochs (weighted mean): {weighted_mean_epochs:.1f}")
         config.top_trials_df=top_trials_df
 
+        try:
+            fig = plot_param_importances(study)
+            fig.write_image("param_importance_plot.png")
+        except Exception as e:
+            pass
+
     top_trials_df["loss_inverse"] = 1/top_trials_df["trial_val"]
 
     #DEFINE BEST MODEL
@@ -143,7 +150,7 @@ def main():
         torch.save(checkpoint, config.model_path)
     
     if config.test_model:
-        model_key,model_data,test_lr=load_model(config.model_path)
+        model_key, model_data, _ = load_model(config.model_path)
         test_model: nn.Module=config.models[model_key]()
         test_model.load_state_dict(model_data)
         test_model.to(config.device)
