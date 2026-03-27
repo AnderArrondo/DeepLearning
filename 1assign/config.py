@@ -27,10 +27,10 @@ class Config:
         self.test_model: bool = True
         self.optimize_hyperparams: bool = True
         self.batch_size: int  = 32
-        self.epochs: int  =  1000
+        self.epochs: int  =  300
         self.lr: float= 6e-3
         self.random_seed: int  = 42
-        self.val_trials: int = 1000000
+        self.val_trials: int = 5000
 
         self.device: str = (
             torch.accelerator.current_accelerator().type
