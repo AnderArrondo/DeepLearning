@@ -57,11 +57,11 @@ optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 epochs = 50
 
-total_loss=0
-
 for epoch in range(epochs):
 
     model.train()  
+    
+    total_loss=0
 
     for images,labels in train_loader:
         images = images.to(device)
@@ -85,9 +85,9 @@ for epoch in range(epochs):
 
         total_loss += loss.item()
 
-avg_loss = total_loss / len(train_loader)
+    avg_loss = total_loss / len(train_loader)
 
-print(f"Epoch {epoch}, Loss: {avg_loss}")
+    print(f"Epoch {epoch}, Loss: {avg_loss}")
 
 
 #Test
