@@ -15,8 +15,9 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 transform = transforms.Compose([ #Ensure all images are ok and as tesnor
-    transforms.Grayscale(),
-    transforms.Resize((48, 48)),
+    # transforms.Grayscale(),
+    # transforms.Resize((48, 48)),
+    #ALREADY DONE
     transforms.ToTensor()
 ])
 
@@ -50,12 +51,14 @@ test_loader = DataLoader(
 #LOSS AND OPTIMISER
 
 criterion = nn.CrossEntropyLoss() #Good for classification
-optimizer = optim.Adam(model.parameters(), lr=0.001)
+optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
 
 #Train
 
-epochs = 15
+epochs = 50
+
+total_loss=0
 
 for epoch in range(epochs):
 
@@ -81,8 +84,11 @@ for epoch in range(epochs):
         # step ADAM
         optimizer.step()
 
-    if epoch % 1 == 0:
-        print(f"Epoch {epoch}, Loss: {loss.item()}")
+        total_loss += loss.item()
+
+avg_loss = total_loss / len(train_loader)
+
+print(f"Epoch {epoch}, Loss: {avg_loss}")
 
 
 #Test

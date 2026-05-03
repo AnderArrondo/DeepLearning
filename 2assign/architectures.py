@@ -22,6 +22,7 @@ class CNN_Expresion_Recognition(nn.Module):
             nn.Flatten(),                
             nn.Linear(32 * 12 * 12, 128),  #Total length
             nn.ReLU(),
+            nn.Dropout(0.5),
             nn.Linear(128, 7)              # 7 emotions probabilities
         )
 
