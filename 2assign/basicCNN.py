@@ -110,4 +110,4 @@ cm = confusion_matrix(all_labels, all_preds)
 
 accuracy = sum([p == t for p, t in zip(all_preds, all_labels)]) / len(all_labels)
 print("Accuracy:", accuracy)
-utils.show_conf(cm)
+utils.show_conf(cm,train_dataset.classes)
