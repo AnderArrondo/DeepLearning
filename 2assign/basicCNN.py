@@ -15,9 +15,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
 transform = transforms.Compose([ #Ensure all images are ok and as tesnor
-    # transforms.Grayscale(),
-    # transforms.Resize((48, 48)),
-    #ALREADY DONE
+    transforms.Grayscale(),
+    transforms.Resize((48, 48)),
     transforms.ToTensor()
 ])
 
