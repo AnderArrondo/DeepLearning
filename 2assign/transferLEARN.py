@@ -79,7 +79,7 @@ for model_name, model_class in models.items():
 
 
 
-    epochs = 50
+    epochs = 5
 
     # -------- TRAIN --------
     for epoch in range(epochs):
