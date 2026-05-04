@@ -2,6 +2,8 @@
 import torch
 import torch.nn as nn
 
+from torchvision import models
+
 class CNN_Expresion_Recognition(nn.Module):
     def __init__(self):
         super().__init__()
@@ -99,3 +101,15 @@ class AlexNet48(nn.Module):
 
         return out
     
+
+
+class TransferVGG16(nn.Module):
+    def __init__(self, num_classes=7):
+        super().__init__()
+        self.model = models.vgg16(pretrained=True)
+        #Change last elem of model for getting the number of final classes we want
+        num_features=self.model.classifier[-1].in_features
+        self.model.classifier[-1]=nn.Linear(num_features,num_classes)
+    
+    def forward(self, x):
+        return self.model(x)
