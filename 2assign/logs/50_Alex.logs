@@ -1,0 +1,56 @@
+cuda
+
+===== Training AlexNet48 =====
+[AlexNet48] Epoch 1/50 - Loss: 1.7508 - Train Acc: 0.2928
+[AlexNet48] Epoch 2/50 - Loss: 1.4873 - Train Acc: 0.4253
+[AlexNet48] Epoch 3/50 - Loss: 1.3745 - Train Acc: 0.4643
+[AlexNet48] Epoch 4/50 - Loss: 1.3005 - Train Acc: 0.4986
+[AlexNet48] Epoch 5/50 - Loss: 1.2598 - Train Acc: 0.5204
+[AlexNet48] Epoch 6/50 - Loss: 1.2128 - Train Acc: 0.5355
+[AlexNet48] Epoch 7/50 - Loss: 1.1740 - Train Acc: 0.5551
+[AlexNet48] Epoch 8/50 - Loss: 1.1448 - Train Acc: 0.5698
+[AlexNet48] Epoch 9/50 - Loss: 1.1139 - Train Acc: 0.5773
+[AlexNet48] Epoch 10/50 - Loss: 1.0877 - Train Acc: 0.5851
+[AlexNet48] Epoch 11/50 - Loss: 1.0560 - Train Acc: 0.6036
+[AlexNet48] Epoch 12/50 - Loss: 1.0319 - Train Acc: 0.6087
+[AlexNet48] Epoch 13/50 - Loss: 1.0070 - Train Acc: 0.6207
+[AlexNet48] Epoch 14/50 - Loss: 0.9832 - Train Acc: 0.6334
+[AlexNet48] Epoch 15/50 - Loss: 0.9635 - Train Acc: 0.6366
+[AlexNet48] Epoch 16/50 - Loss: 0.9282 - Train Acc: 0.6478
+[AlexNet48] Epoch 17/50 - Loss: 0.9036 - Train Acc: 0.6587
+[AlexNet48] Epoch 18/50 - Loss: 0.8846 - Train Acc: 0.6707
+[AlexNet48] Epoch 19/50 - Loss: 0.8493 - Train Acc: 0.6818
+[AlexNet48] Epoch 20/50 - Loss: 0.8257 - Train Acc: 0.6890
+[AlexNet48] Epoch 21/50 - Loss: 0.8077 - Train Acc: 0.6986
+[AlexNet48] Epoch 22/50 - Loss: 0.7709 - Train Acc: 0.7136
+[AlexNet48] Epoch 23/50 - Loss: 0.7470 - Train Acc: 0.7231
+[AlexNet48] Epoch 24/50 - Loss: 0.7214 - Train Acc: 0.7325
+[AlexNet48] Epoch 25/50 - Loss: 0.6920 - Train Acc: 0.7453
+[AlexNet48] Epoch 26/50 - Loss: 0.6695 - Train Acc: 0.7519
+[AlexNet48] Epoch 27/50 - Loss: 0.6417 - Train Acc: 0.7627
+[AlexNet48] Epoch 28/50 - Loss: 0.6128 - Train Acc: 0.7758
+[AlexNet48] Epoch 29/50 - Loss: 0.5782 - Train Acc: 0.7868
+[AlexNet48] Epoch 30/50 - Loss: 0.5665 - Train Acc: 0.7928
+[AlexNet48] Epoch 31/50 - Loss: 0.5334 - Train Acc: 0.8028
+[AlexNet48] Epoch 32/50 - Loss: 0.5164 - Train Acc: 0.8102
+[AlexNet48] Epoch 33/50 - Loss: 0.4913 - Train Acc: 0.8202
+[AlexNet48] Epoch 34/50 - Loss: 0.4736 - Train Acc: 0.8283
+[AlexNet48] Epoch 35/50 - Loss: 0.4498 - Train Acc: 0.8377
+[AlexNet48] Epoch 36/50 - Loss: 0.4269 - Train Acc: 0.8473
+[AlexNet48] Epoch 37/50 - Loss: 0.4123 - Train Acc: 0.8500
+[AlexNet48] Epoch 38/50 - Loss: 0.3869 - Train Acc: 0.8609
+[AlexNet48] Epoch 39/50 - Loss: 0.3662 - Train Acc: 0.8685
+[AlexNet48] Epoch 40/50 - Loss: 0.3514 - Train Acc: 0.8762
+[AlexNet48] Epoch 41/50 - Loss: 0.3444 - Train Acc: 0.8775
+[AlexNet48] Epoch 42/50 - Loss: 0.3123 - Train Acc: 0.8920
+[AlexNet48] Epoch 43/50 - Loss: 0.3206 - Train Acc: 0.8854
+[AlexNet48] Epoch 44/50 - Loss: 0.2914 - Train Acc: 0.8983
+[AlexNet48] Epoch 45/50 - Loss: 0.2952 - Train Acc: 0.8959
+[AlexNet48] Epoch 46/50 - Loss: 0.2616 - Train Acc: 0.9077
+[AlexNet48] Epoch 47/50 - Loss: 0.2556 - Train Acc: 0.9125
+[AlexNet48] Epoch 48/50 - Loss: 0.2391 - Train Acc: 0.9171
+[AlexNet48] Epoch 49/50 - Loss: 0.2564 - Train Acc: 0.9115
+[AlexNet48] Epoch 50/50 - Loss: 0.2186 - Train Acc: 0.9251
+[AlexNet48] Model Saved -> ./2assign/models/AlexNet48_final.pth
+
+>>> AlexNet48 Accuracy: 0.5892
