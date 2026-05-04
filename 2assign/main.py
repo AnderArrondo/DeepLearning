@@ -18,7 +18,7 @@ from torch.utils.tensorboard import SummaryWriter
 SEED=42
 BATCH_SIZE=64
 WORKERS=4
-EPOCHS=100
+EPOCHS=300
 
 MODELS_PATH = "./2assign/models"
 LOGS_PATH = "./2assign/logs"
@@ -34,9 +34,9 @@ print(device)
 
 # ---------------- MODELS ----------------
 models = {    
-    "TransferVGG16":arch.TransferVGG16,
-    "CNN": arch.CNN_Expresion_Recognition,
-    "AlexNet48": arch.AlexNet48
+    "TransferVGG16":arch.TransferVGG16#,
+   # "CNN": arch.CNN_Expresion_Recognition,
+   # "AlexNet48": arch.AlexNet48
 }
 
 # ---------------- TRAIN + EVAL LOOP ----------------
