@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 matplotlib.use('Agg')
 import os
 import numpy as np
+import seaborn as sns
 
 #AI Generated
 def show_conf(cm, class_names):
@@ -28,3 +29,10 @@ def show_conf(cm, class_names):
 
     plt.savefig("./2assign/results/confusion_matrix.png", dpi=300, bbox_inches='tight')
     plt.close()
+
+def conf_to_figure(cm,classes):
+    fig,ax=plt.subplots(figsize=(8,8))
+    sns.heatmap(cm,annot=True,fmt="d",xticklabels=classes,yticklabels=classes,ax=ax)
+    ax.set_xlabel("Predicted")
+    ax.set_ylabel("True")
+    return fig
