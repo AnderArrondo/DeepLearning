@@ -17,10 +17,10 @@ print(device)
 
 
 # ---------------- MODELS ----------------
-models = {
+models = {    
+    "TransferVGG16":arch.TransferVGG16,
     "CNN": arch.CNN_Expresion_Recognition,
-    "AlexNet48": arch.AlexNet48,
-    "TransferVGG16":arch.TransferVGG16
+    "AlexNet48": arch.AlexNet48
 }
 
 # ---------------- TRAIN + EVAL LOOP ----------------
