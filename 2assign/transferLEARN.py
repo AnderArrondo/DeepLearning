@@ -41,7 +41,7 @@ for model_name, model_class in models.items():
             param.requires_grad = False
 
     # ---------------- TRANSFORMS ----------------
-
+    if "Transfer" in model_name or "Alex" in model_name:
         transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=3), 
         transforms.Resize((224, 224)),
@@ -51,6 +51,7 @@ for model_name, model_class in models.items():
             std=[0.229, 0.224, 0.225]
         )
         ])
+
     else:
         transform = transforms.Compose([
             transforms.Grayscale(),
