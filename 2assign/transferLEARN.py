@@ -53,7 +53,7 @@ for model_name, model_class in models.items():
         ])
     else:
         transform = transforms.Compose([
-            transforms.Grayscale(),
+            transforms.Grayscale(num_output_channels=3),
             transforms.Resize((48, 48)),
             transforms.ToTensor()
         ])
