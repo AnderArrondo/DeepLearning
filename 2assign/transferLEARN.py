@@ -41,7 +41,7 @@ for model_name, model_class in models.items():
             param.requires_grad = False
 
     # ---------------- TRANSFORMS ----------------
-    if "Transfer" in model_name or "Alex" in model_name:
+    if "Transfer" in model_name:
         transform = transforms.Compose([
         transforms.Grayscale(num_output_channels=3), 
         transforms.Resize((224, 224)),
@@ -59,8 +59,6 @@ for model_name, model_class in models.items():
             transforms.ToTensor()
         ])
 
-
-
     # ---------------- DATASETS ----------------
     train_dataset = ImageFolder(
         root='2assign/data/train',
@@ -77,12 +75,10 @@ for model_name, model_class in models.items():
     train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
-
-
-
-    epochs = 5
-
     # -------- TRAIN --------
+
+    epochs = 1
+
     for epoch in range(epochs):
 
         model.train()
