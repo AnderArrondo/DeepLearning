@@ -14,105 +14,88 @@ from sklearn.metrics import confusion_matrix
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-transform = transforms.Compose([ #Ensure all images are ok and as tesnor
+# ---------------- TRANSFORMS ----------------
+transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((48, 48)),
     transforms.ToTensor()
 ])
 
-# TRAIN
+# ---------------- DATASETS ----------------
 train_dataset = ImageFolder(
     root='2assign/data/train',
     transform=transform
 )
 
-# TEST
 test_dataset = ImageFolder(
     root='2assign/data/test',
     transform=transform
 )
 
-model=arch.CNN_Expresion_Recognition().to(device)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
-#DATALOADERS
-train_loader = DataLoader(
-    train_dataset,
-    batch_size=64,
-    shuffle=True
-)
+# ---------------- MODELS ----------------
+models = {
+    "CNN": arch.CNN_Expresion_Recognition,
+    "AlexNet48": arch.AlexNet48
+}
 
-test_loader = DataLoader(
-    test_dataset,
-    batch_size=64,
-    shuffle=False
-)
+# ---------------- TRAIN + EVAL LOOP ----------------
+for model_name, model_class in models.items():
 
-#LOSS AND OPTIMISER
+    print(f"\n===== Training {model_name} =====")
 
-criterion = nn.CrossEntropyLoss() #Good for classification
-optimizer = optim.Adam(model.parameters(), lr=0.0005)
+    model = model_class().to(device)
 
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=0.0005)
 
-#Train
+    epochs = 50
 
-epochs = 50
+    # -------- TRAIN --------
+    for epoch in range(epochs):
 
-for epoch in range(epochs):
+        model.train()
+        total_loss = 0
 
-    model.train()  
-    
-    total_loss=0
+        for images, labels in train_loader:
+            images = images.to(device)
+            labels = labels.to(device)
 
-    for images,labels in train_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-        
-        # forward pass
-        predictions = model(images)
+            predictions = model(images)
+            loss = criterion(predictions, labels)
 
-        # error
-        loss = criterion(predictions, labels)
-    
-        #BACKWARD
-        # gradient restart
-        optimizer.zero_grad()
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-        # backpropagation
-        loss.backward()
+            total_loss += loss.item()
 
-        # step ADAM
-        optimizer.step()
+        avg_loss = total_loss / len(train_loader)
+        print(f"[{model_name}] Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
 
-        total_loss += loss.item()
+    # -------- TEST --------
+    model.eval()
 
-    avg_loss = total_loss / len(train_loader)
+    all_preds = []
+    all_labels = []
 
-    print(f"Epoch {epoch}, Loss: {avg_loss}")
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images = images.to(device)
+            labels = labels.to(device)
 
+            predictions = model(images)
+            predicted = torch.argmax(predictions, dim=1)
 
-#Test
+            all_preds.extend(predicted.cpu().numpy())
+            all_labels.extend(labels.cpu().numpy())
 
-model.eval()
+    cm = confusion_matrix(all_labels, all_preds)
 
+    accuracy = sum(p == t for p, t in zip(all_preds, all_labels)) / len(all_labels)
 
-all_preds = []
-all_labels = []
+    print(f"\n>>> {model_name} Accuracy: {accuracy:.4f}")
 
-with torch.no_grad():
-
-    for images,labels in test_loader:
-        images = images.to(device)
-        labels = labels.to(device)
-
-        predictions = model(images)
-
-        predicted = torch.argmax(predictions, dim=1)
-
-        all_preds.extend(predicted.cpu().numpy())
-        all_labels.extend(labels.cpu().numpy())
-
-cm = confusion_matrix(all_labels, all_preds)
-
-accuracy = sum([p == t for p, t in zip(all_preds, all_labels)]) / len(all_labels)
-print("Accuracy:", accuracy)
-utils.show_conf(cm,train_dataset.classes)
+    utils.show_conf(cm, train_dataset.classes)
