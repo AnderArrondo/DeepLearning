@@ -1,8 +1,15 @@
 
 # CLASS EXERCISES
 exercises/
-extrassign/
-
+**/models/
+**/runs/
+*.pth
+*.pt
+*.log
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
