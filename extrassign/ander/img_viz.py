@@ -2,7 +2,7 @@
 #######
 # Visualization utils
 #######
-from extrassign.ander.config import PLOTS_PATH
+from config import PLOTS_PATH
 
 import matplotlib.pyplot as plt
 

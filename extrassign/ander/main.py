@@ -2,10 +2,10 @@
 #######
 # Libraries
 #######
-from extrassign.ander.schemas import VAE
-from extrassign.ander.optim import objective, vae_loss
-from extrassign.ander.img_viz import view_image, view_images, view_reconstructions
-from extrassign.ander.config import (
+from schemas import VAE
+from optim import objective, vae_loss
+from img_viz import view_image, view_images, view_reconstructions
+from config import (
     SEED, DEVICE, INPUT_DIM,
     DATA_PATH, BEST_MODEL_PATH, OPTUNA_DB_URL,
     TRIALS, N_EPOCHS,

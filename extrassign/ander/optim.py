@@ -2,8 +2,8 @@
 #######
 # Optuna optimization
 #######
-from extrassign.ander.schemas import VAE
-from extrassign.ander.config import INPUT_DIM, DEVICE, N_EPOCHS
+from schemas import VAE
+from config import INPUT_DIM, DEVICE, N_EPOCHS
 
 import optuna
 
