@@ -36,7 +36,10 @@ candidate_labels = y.unique()
 #######
 # Pipeline
 #######
-classifier = pipeline("zero-shot-classification", model=MODEL)
+classifier = pipeline(
+    "zero-shot-classification",
+    model=MODEL, device=DEVICE
+)
 
 preds = []
 for i in tqdm(range(0, len(X), ZERO_SHOT_BATCH_SIZE)):
@@ -45,8 +48,7 @@ for i in tqdm(range(0, len(X), ZERO_SHOT_BATCH_SIZE)):
     results = classifier(
         batch,
         candidate_labels=candidate_labels,
-        batch_size=len(batch),
-        device=DEVICE
+        batch_size=len(batch)
     )
     preds.extend([res["labels"][0] for res in results])
 
