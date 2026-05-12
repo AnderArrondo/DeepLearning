@@ -50,27 +50,38 @@ for i in tqdm(range(0, len(X), ZERO_SHOT_BATCH_SIZE)):
     )
     preds.extend([res["labels"][0] for res in results])
 
-cm = confusion_matrix(y, preds)
+pred_df = pd.DataFrame({
+    "text": X["content"],
+    "true": y,
+    "pred": preds
+})
+
+pred_df.to_csv(
+    RESULTS_DIR + "zero_shot_predictions.csv",
+    index=False
+)
+
+cm = confusion_matrix(y, preds, normalize="true")
 disp = ConfusionMatrixDisplay(confusion_matrix=cm,display_labels=sorted(list(set(y))))
-disp.plot(cmap="Blues")
+disp.plot(cmap="Blues", values_format=".2f")
+plt.tight_layout()
 plt.savefig(PLOTS_DIR + "zero_shot_conf_matrix.png")
 
 metrics = {
-    "acc": accuracy_score(y, preds),
-    "balanced_acc": balanced_accuracy_score(y, preds),
+    "acc": float(accuracy_score(y, preds)),
+    "balanced_acc": float(balanced_accuracy_score(y, preds)),
     
-    "f1_macro": f1_score(y, preds, average="macro"),
-    "f1_weighted": f1_score(y, preds, average="weighted"),
+    "f1_macro": float(f1_score(y, preds, average="macro")),
+    "f1_weighted": float(f1_score(y, preds, average="weighted")),
 
-    "precision_macro": precision_score(y, preds, average="macro"),
-    "precision_weighted": precision_score(y, preds, average="weighted"),
+    "precision_macro": float(precision_score(y, preds, average="macro")),
+    "precision_weighted": float(precision_score(y, preds, average="weighted")),
 
-    "recall_macro": recall_score(y, preds, average="macro"),
-    "recall_weighted": recall_score(y, preds, average="weighted"),
+    "recall_macro": float(recall_score(y, preds, average="macro")),
+    "recall_weighted": float(recall_score(y, preds, average="weighted")),
 
     "report": classification_report(y, preds, output_dict=True)
 }
 
 with open(str(RESULTS_DIR + "zero_shot.json"), "w") as f:
-    json.dump(metrics, f)
-    
+    json.dump(metrics, f, indent=4)
