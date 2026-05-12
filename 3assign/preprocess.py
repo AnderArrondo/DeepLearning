@@ -1,9 +1,11 @@
 
-from config import ORIG_CSV, DATA_DIR
+from config import ORIG_CSV, DATA_DIR, PLOTS_DIR
 
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
+
+PLOT_OR_SAVE = "save" # ["save", "plot"] alternatives
 
 df = pd.read_csv(ORIG_CSV)
 df.drop(columns=["tweet_id"], inplace=True)
@@ -48,4 +50,7 @@ plt.ylabel("Sentiment labels")
 plt.xlabel("# of ocurrences")
 
 plt.tight_layout()
-plt.show()
+if PLOT_OR_SAVE == "plot":
+    plt.show()
+else:
+    plt.savefig(PLOTS_DIR + "label_distribution.png")
