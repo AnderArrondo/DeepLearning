@@ -12,7 +12,7 @@ def view_image(image, label):
     plt.axis("off")
 
     plt.savefig(PLOTS_PATH + "single_number.png")
-    plt.show()
+    # plt.show()
 
 def view_images(images, labels, n_cols, n_rows):
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 8))
@@ -27,7 +27,7 @@ def view_images(images, labels, n_cols, n_rows):
 
     plt.tight_layout()
     plt.savefig(PLOTS_PATH + "multiple_numbers.png")
-    plt.show()
+    # plt.show()
 
 def view_reconstructions(images, reconstructions, n_rows, n_cols):
     total_images = min(len(images), n_rows * n_cols)
@@ -69,4 +69,4 @@ def view_reconstructions(images, reconstructions, n_rows, n_cols):
 
     plt.tight_layout()
     plt.savefig(PLOTS_PATH + "reconstruction_comp.png")
-    plt.show()
+    # plt.show()
