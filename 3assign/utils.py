@@ -245,3 +245,132 @@ def create_embeddings(texts, max_length=None):
             )
 
     return padded_sequences.long(), vocab
+
+# The biggest issue is this:
+
+# X_test_tensor, _ = create_embeddings(X_test["content"])
+
+# You are creating a different vocabulary for test data.
+
+# That is a major NLP mistake.
+
+# A word may map to:
+
+# "happy" -> 15 in train
+# "happy" -> 82 in test
+
+# which completely breaks inference.
+
+# Main Problems
+# 1. Different vocabularies for train/test ❌
+
+# This is the biggest issue.
+
+# Your current code:
+
+# X_tensor, vocab = create_embeddings(X_train["content"])
+
+# X_test_tensor, _ = create_embeddings(X_test["content"])
+
+# creates:
+
+# train vocab
+# test vocab
+
+# independently.
+
+# This makes embeddings meaningless.
+
+# FIX
+
+# You need:
+
+# build vocab ONLY from train
+# reuse same vocab for test
+# 2. Critical bug: wrong labels ❌
+
+# You wrote:
+
+# y_train_tensor = torch.tensor(y_test).long()
+
+# That is wrong.
+
+# Should be:
+
+# y_train_tensor = torch.tensor(y_train).long()
+
+# Right now you are training on test labels.
+
+# 3. OOV words (unknown words) ❌
+
+# Your current encoding assumes every word exists:
+
+# vocab[word]
+
+# But test data may contain unseen words.
+
+# This will crash.
+
+# You need:
+
+# <UNK> token
+
+# Example:
+
+# vocab = {
+#     "<PAD>": 0,
+#     "<UNK>": 1
+# }
+
+# then:
+
+# vocab.get(word, vocab["<UNK>"])
+# 4. You are training on the entire dataset as one batch ⚠️
+
+# This works for tiny experiments:
+
+# outputs = classifier(X_tensor)
+
+# But:
+
+# no minibatching
+# no shuffling
+# poor scalability
+
+# Not wrong for debugging though.
+
+# 5. Hyperparameter names are misleading ⚠️
+# num_layers=trial.suggest_int("num neurons per layer", 2,10)
+
+# This is not neurons per layer.
+
+# It is:
+
+# number of recurrent layers
+
+# Better:
+
+# "num_layers"
+# 6. Your sequence handling is weak ⚠️
+
+# You currently do:
+
+# last_hidden = output[:, -1, :]
+
+# But you use padding.
+
+# So the final token may be padding.
+
+# You should use:
+
+# hidden[-1]
+
+# as discussed before.
+
+# 7. No device handling (CPU/GPU) ⚠️
+
+# You should eventually add:
+
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# and move tensors/models.
