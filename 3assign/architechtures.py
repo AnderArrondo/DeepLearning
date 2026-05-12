@@ -4,11 +4,11 @@ import config
 
 class LSTM_classifier(nn.Module):
 
-    def __init__(self, embedding, embedding_size, num_layers, hidden_size):
+    def __init__(self, embedding, embedding_size, hidden_size, num_layers):
         super().__init__()
         self.embedding=embedding
 
-        self.lstm = nn.LSTM(embedding_size,hidden_size, num_layers)  
+        self.lstm = nn.LSTM(embedding_size,hidden_size, num_layers, batch_first=True)  
 
         self.fc = nn.Linear(hidden_size, config.N_CLASSES)
 
@@ -25,7 +25,7 @@ class LSTM_classifier(nn.Module):
 
 class GRU_classifier(nn.Module):
 
-    def __init__(self, embedding, embedding_size, num_layers, hidden_size):
+    def __init__(self, embedding, embedding_size, hidden_size, num_layers):
         super().__init__()
 
         self.embedding=embedding
