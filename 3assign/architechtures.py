@@ -55,26 +55,6 @@ class GRU_classifier(nn.Module):
 
 # A few important notes/improvements though.
 
-# 1. Main logic is correct
-
-# This part is fine:
-
-# output, hidden = self.lstm(x)
-# last_hidden = output[:, -1, :]
-# out = self.fc(last_hidden)
-
-# Same for GRU.
-
-# Shapes are:
-
-# x:              (batch, seq_len)
-# embedding(x):   (batch, seq_len, embedding_size)
-# output:         (batch, seq_len, hidden_size)
-# last_hidden:    (batch, hidden_size)
-# out:            (batch, N_CLASSES)
-
-# Exactly what you want.
-
 # 2. Better to use hidden state directly
 
 # Currently you do:
