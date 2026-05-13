@@ -2,7 +2,7 @@
 #######
 # Visualization utils
 #######
-from config import PLOTS_PATH
+from config import PLOTS_PATH, VISUALIZE_PLOTS
 
 import matplotlib.pyplot as plt
 
@@ -11,8 +11,11 @@ def view_image(image, label):
     plt.title(f"Label: {label}")
     plt.axis("off")
 
-    plt.savefig(PLOTS_PATH + "single_number.png")
-    # plt.show()
+    plt.tight_layout()
+    if VISUALIZE_PLOTS:
+        plt.show()
+    else:
+        plt.savefig(PLOTS_PATH + "single_number.png")
 
 def view_images(images, labels, n_cols, n_rows):
     fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 8))
@@ -26,8 +29,10 @@ def view_images(images, labels, n_cols, n_rows):
         axes[i].axis("off")
 
     plt.tight_layout()
-    plt.savefig(PLOTS_PATH + "multiple_numbers.png")
-    # plt.show()
+    if VISUALIZE_PLOTS:
+        plt.show()
+    else:
+        plt.savefig(PLOTS_PATH + "multiple_numbers.png")
 
 def view_reconstructions(images, reconstructions, n_rows, n_cols):
     total_images = min(len(images), n_rows * n_cols)
@@ -68,5 +73,8 @@ def view_reconstructions(images, reconstructions, n_rows, n_cols):
     axes[1, 0].set_title("Reconstructed")
 
     plt.tight_layout()
-    plt.savefig(PLOTS_PATH + "reconstruction_comp.png")
-    # plt.show()
+    if VISUALIZE_PLOTS:
+        plt.show()
+    else:
+        plt.savefig(PLOTS_PATH + "reconstruction_comp.png")
+

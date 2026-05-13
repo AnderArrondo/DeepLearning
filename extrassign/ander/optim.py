@@ -14,14 +14,14 @@ from torch.utils.tensorboard import SummaryWriter
 
 def vae_loss(x_hat, x, mu, logvar, beta=1.0):
     # reconstruction loss
-    recon = nn.functional.binary_cross_entropy(x_hat, x, reduction="sum")
+    recon = nn.functional.binary_cross_entropy(x_hat, x, reduction="mean")
     # kl divergence loss
     kl = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
     return recon + beta * kl, recon, kl
 
 def objective(trial, train_dataset, val_dataset):
     # hyper params
-    batch_size = trial.suggest_categorical("batch_size", [16, 32, 64, 128, 256])
+    batch_size = trial.suggest_categorical("batch_size", [256, 512, 1024, 2048])
     lr = trial.suggest_float("lr", 1e-5, 1e-2, log=True)
     optimizer_name = trial.suggest_categorical("optimizer", ["Adam", "AdamW"])
     beta1 = trial.suggest_float("beta1", 0.8, 0.95)
@@ -35,7 +35,7 @@ def objective(trial, train_dataset, val_dataset):
         n_units_power = trial.suggest_int(f"n_units_power_l{i}", 3, 9) 
         hidden_dims.append(2 ** n_units_power)
     dropout_rate = trial.suggest_float("dropout_rate", 0.0, 0.5)
-    latent_dim = trial.suggest_int("latent_dim", 8, 256, log=True)
+    latent_dim = trial.suggest_int("latent_dim", 32, 256, log=True)
 
     # model and optimizer and data
     model = VAE(INPUT_DIM, hidden_dims, dropout_rate, latent_dim).to(DEVICE)
@@ -58,12 +58,18 @@ def objective(trial, train_dataset, val_dataset):
     train_loader = DataLoader(
         train_dataset,
         batch_size=batch_size,
-        shuffle=True
+        shuffle=True,
+        num_workers=4,
+        pin_memory=True,
+        persistent_workers=True
     )
     val_loader = DataLoader(
         val_dataset,
         batch_size=batch_size,
-        shuffle=False
+        shuffle=False,
+        num_workers=4,
+        pin_memory=True,
+        persistent_workers=True
     )
 
     writer = SummaryWriter(log_dir=f"extrassign/runs/trial_{trial.number}")
@@ -75,7 +81,7 @@ def objective(trial, train_dataset, val_dataset):
         recon_loss = 0.0
         kl_loss = 0.0
         for images, _ in train_loader:
-            images = images.view(images.size(0), -1).to(DEVICE)
+            images = images.view(images.size(0), -1).to(DEVICE, non_blocking=True)
             optimizer.zero_grad()
 
             x_hat, mu, logvar = model(images)

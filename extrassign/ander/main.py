@@ -21,6 +21,8 @@ from torch.utils.tensorboard import SummaryWriter
 
 import matplotlib.pyplot as plt
 
+torch.backends.cudnn.benchmark = True
+
 #######
 # Data collection
 #######
@@ -120,12 +122,18 @@ else:
 train_loader = DataLoader(
     train_dataset,
     batch_size=batch_size,
-    shuffle=True
+    shuffle=True,
+    num_workers=4,
+    pin_memory=True,
+    persistent_workers=True
 )
 val_loader = DataLoader(
     val_dataset,
     batch_size=batch_size,
-    shuffle=False
+    shuffle=False,
+    num_workers=4,
+    pin_memory=True,
+    persistent_workers=True
 )
 
 writer = SummaryWriter(log_dir=f"extrassign/runs/best_trial")
@@ -136,7 +144,7 @@ for epoch in range(N_EPOCHS):
     recon_loss = 0.0
     kl_loss = 0.0
     for images, _ in train_loader:
-        images = images.view(images.size(0), -1).to(DEVICE)
+        images = images.view(images.size(0), -1).to(DEVICE, non_blocking=True)
         optimizer.zero_grad()
 
         x_hat, mu, logvar = best_model(images)
