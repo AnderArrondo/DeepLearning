@@ -1,4 +1,3 @@
-
 import torch
 
 ORIG_CSV: str = "./3assign/data/tweet_emotions.csv"
@@ -11,10 +10,11 @@ MODEL: str = "roberta-large-mnli"
 ZERO_SHOT_BATCH_SIZE: int = 256
 SEED: int = 42
 N_CLASSES: int = 12
+STUDY_NAME: str = "template_study_name"
 
 #OPTUNA
 optimize_hyperparams: bool = True
 n_trials: int = 100
-n_epochs: int = 1
+n_epochs: int = 10
 batch_size: int = 32
 dropout:float = 0.3

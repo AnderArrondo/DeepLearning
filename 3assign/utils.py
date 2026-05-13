@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import TensorDataset, DataLoader
+from torch.utils.tensorboard import SummaryWriter
 
 import pandas as pd
 
@@ -34,7 +35,8 @@ X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2)
 
 
 def objective_function(trial):
-    #CLASSIFIERS: LSTM GRU
+    writer=SummaryWriter(f"runs/{config.STUDY_NAME}")
+
     classifier=None
     classifier_type=trial.suggest_categorical("classifier type", ["LSTM","GRU"])
     
@@ -120,6 +122,7 @@ def objective_function(trial):
             epoch_loss += loss.item()
 
         mean_loss = epoch_loss / len(train_loader)
+        writer.add_scalar("Loss/Train", mean_loss)
         trial.report(mean_loss, epoch)
 
         if trial.should_prune():
@@ -139,6 +142,7 @@ def objective_function(trial):
     y_test_tensor.cpu().numpy(),
     y_pred.cpu().numpy()
     )
+    writer.add_scalar("Accuracy/Test",fold_score,trial.number)
     
     return fold_score
 
@@ -264,16 +268,3 @@ def create_embeddings(texts,vocab=None, max_length=None):
     return padded_sequences.long(), vocab
 
 
-# 4. You are training on the entire dataset as one batch ⚠️
-
-# This works for tiny experiments:
-
-# outputs = classifier(X_tensor)
-
-# But:
-
-# no minibatching
-# no shuffling
-# poor scalability
-
-# Not wrong for debugging though.

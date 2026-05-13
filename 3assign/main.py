@@ -1,5 +1,9 @@
 from sklearn.model_selection import train_test_split
 
+#RADEON
+import os
+os.environ["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0"
+
 import pandas as pd
 import torch
 import optuna
@@ -7,16 +11,13 @@ import optuna
 import config
 import utils
 
-
+print(torch.version.hip)
+config.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(config.DEVICE)
 
-# print(X_train.shape)
-# print(X_test.shape)
-# print(y_train.shape)
-# print(y_test.shape)
-
 #OPTUNA
-study_name="study 1"
+study_name=input("Enter study name:")
+config.STUDY_NAME=study_name
 if config.optimize_hyperparams:
     sampler=optuna.samplers.TPESampler(seed=config.SEED)
     pruner=optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=3)
