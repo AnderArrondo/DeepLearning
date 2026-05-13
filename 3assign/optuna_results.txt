@@ -1,0 +1,13 @@
+--- Optimization Finished test---
+
+1 trials
+
+Best Score: 0.2500
+Best Hyperparameters:
+  classifier type: LSTM
+  embedding size: 234
+  hidden layer size: 218
+  num_layers: 1
+  lr: 0.0007254775804097544
+  dropout: 0.4351769782579893
+
