@@ -25,7 +25,7 @@ class LSTM_classifier(nn.Module):
 
 class GRU_classifier(nn.Module):
 
-    def __init__(self, embedding, embedding_size, hidden_size, num_layers):
+    def __init__(self, embedding, embedding_size, hidden_size, num_layers,dropout=config.dropout):
         super().__init__()
 
         self.embedding=embedding
