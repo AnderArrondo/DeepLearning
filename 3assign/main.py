@@ -1,8 +1,8 @@
 from sklearn.model_selection import train_test_split
 
 #RADEON
-import os
-os.environ["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0"
+#import os
+#os.environ["HSA_OVERRIDE_GFX_VERSION"] = "10.1.0"
 
 import pandas as pd
 import torch
@@ -11,7 +11,6 @@ import optuna
 import config
 import utils
 
-print(torch.version.hip)
 config.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 print(config.DEVICE)
 
