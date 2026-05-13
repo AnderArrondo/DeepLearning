@@ -7,6 +7,7 @@ from collections import Counter
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pad_sequence
+from torch.utils.data import TensorDataset, DataLoader
 
 import pandas as pd
 
@@ -15,9 +16,11 @@ import optuna
 import config
 import architechtures
 
+
+
 X=pd.read_csv(config.DATA_DIR+"tweet_emotions_X.csv")
 y=pd.read_csv(config.DATA_DIR+"tweet_emotions_y.csv")
-#NO HAY BATCHES; SI QUEITAS ESTO MUERE
+#NO HAY BATCHES; SI QUITAS ESTO MUERE
 X = X.head(200)
 y = y[:200]
 
@@ -37,13 +40,16 @@ def objective_function(trial):
     
     embedding_size=trial.suggest_int("embedding size",20,300)
     hidden_size=trial.suggest_int("hidden layer size", 10,30)
-    num_layers=trial.suggest_int("num neurons per layer", 2,10)
+    num_layers=trial.suggest_int("num_layers", 2,10)
 
     X_tensor, vocab= create_embeddings(X_train["content"], max_length=100)#CREO QUE MAX EN DEL TWEET
+    X_tensor=X_tensor.to(config.DEVICE)
+
     embedding=nn.Embedding(
         num_embeddings=len(vocab),
         embedding_dim=embedding_size    
     )
+
     if classifier_type=="LSTM":
         classifier=architechtures.LSTM_classifier(
             embedding,
@@ -62,18 +68,27 @@ def objective_function(trial):
         classifier=None
 
 
+    classifier=classifier.to(config.DEVICE)
 
-    # ME FALTA PREDECIR AQUI
     X_test_tensor, _ = create_embeddings(
         X_test["content"],
+        vocab=vocab,
         max_length=100
     )
+    X_test_tensor = X_test_tensor.to(config.DEVICE)
 
-    #VOCAB TRAIN Y TEST DSITINTO--> MALISIMO
-    y_train_tensor = torch.tensor(y_test).long()
+    y_train_tensor = torch.tensor(y_train).long().to(config.DEVICE)
+    train_dataset = TensorDataset(
+        X_tensor,
+        y_train_tensor
+    )
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=config.batch_size,
+        shuffle=True
+    )
 
-    y_test_tensor = torch.tensor(y_test).long()
-
+    y_test_tensor = torch.tensor(y_test).long().to(config.DEVICE)
     criterion = nn.CrossEntropyLoss()
     learning_rate=trial.suggest_float("lr", 10e-5,10e-2,log=True)
     optimizer = torch.optim.Adam(
@@ -86,24 +101,26 @@ def objective_function(trial):
     for epoch in range(epochs):
 
         classifier.train()
+        epoch_loss=0
+        for batch_X, batch_y in train_loader:
 
-        optimizer.zero_grad()
+            optimizer.zero_grad()
 
-        outputs = classifier(X_tensor)
+            outputs = classifier(batch_X)
 
-        print(outputs.shape)
-        print(y_train_tensor.shape)
+            loss = criterion(
+                outputs,
+                batch_y
+            )
 
-        loss = criterion(
-            outputs,
-            y_train_tensor
-        )
+            loss.backward()
 
-        loss.backward()
+            optimizer.step()
 
-        optimizer.step()
+            epoch_loss += loss.item()
 
-        trial.report(loss.item(), epoch)
+        mean_loss = epoch_loss / len(train_loader)
+        trial.report(mean_loss, epoch)
 
         if trial.should_prune():
             raise optuna.TrialPruned()
@@ -119,8 +136,8 @@ def objective_function(trial):
             dim=1
         )
     fold_score = accuracy_score(
-    y_test_tensor.numpy(),
-    y_pred.numpy()
+    y_test_tensor.cpu().numpy(),
+    y_pred.cpu().numpy()
     )
     
     return fold_score
@@ -129,7 +146,7 @@ def objective_function(trial):
 
 
 
-def create_embeddings(texts, max_length=None):
+def create_embeddings(texts,vocab=None, max_length=None):
     """
     Convierte una lista de strings en tensores preparados
     para una LSTM/GRU.
@@ -182,12 +199,12 @@ def create_embeddings(texts, max_length=None):
     counter = Counter(all_words)
 
     vocab = {
-        word: idx + 1
-        for idx, (word, _) in enumerate(counter.items())
-    }
-
-    # 0 reservado para padding
-    vocab["<PAD>"] = 0
+            "<PAD>": 0,
+            "<UNK>": 1
+        }
+    
+    for idx, (word, _) in enumerate(counter.items()):
+        vocab[word] = idx + 2
 
     # ---------------------------------------------------
     # TEXTO -> ÍNDICES
@@ -198,7 +215,7 @@ def create_embeddings(texts, max_length=None):
     for tokens in tokenized_texts:
 
         encoded = [
-            vocab[word]
+            vocab.get(word, vocab["<UNK>"])
             for word in tokens
         ]
 
@@ -246,85 +263,7 @@ def create_embeddings(texts, max_length=None):
 
     return padded_sequences.long(), vocab
 
-# The biggest issue is this:
 
-# X_test_tensor, _ = create_embeddings(X_test["content"])
-
-# You are creating a different vocabulary for test data.
-
-# That is a major NLP mistake.
-
-# A word may map to:
-
-# "happy" -> 15 in train
-# "happy" -> 82 in test
-
-# which completely breaks inference.
-
-# Main Problems
-# 1. Different vocabularies for train/test ❌
-
-# This is the biggest issue.
-
-# Your current code:
-
-# X_tensor, vocab = create_embeddings(X_train["content"])
-
-# X_test_tensor, _ = create_embeddings(X_test["content"])
-
-# creates:
-
-# train vocab
-# test vocab
-
-# independently.
-
-# This makes embeddings meaningless.
-
-# FIX
-
-# You need:
-
-# build vocab ONLY from train
-# reuse same vocab for test
-# 2. Critical bug: wrong labels ❌
-
-# You wrote:
-
-# y_train_tensor = torch.tensor(y_test).long()
-
-# That is wrong.
-
-# Should be:
-
-# y_train_tensor = torch.tensor(y_train).long()
-
-# Right now you are training on test labels.
-
-# 3. OOV words (unknown words) ❌
-
-# Your current encoding assumes every word exists:
-
-# vocab[word]
-
-# But test data may contain unseen words.
-
-# This will crash.
-
-# You need:
-
-# <UNK> token
-
-# Example:
-
-# vocab = {
-#     "<PAD>": 0,
-#     "<UNK>": 1
-# }
-
-# then:
-
-# vocab.get(word, vocab["<UNK>"])
 # 4. You are training on the entire dataset as one batch ⚠️
 
 # This works for tiny experiments:
@@ -338,39 +277,3 @@ def create_embeddings(texts, max_length=None):
 # poor scalability
 
 # Not wrong for debugging though.
-
-# 5. Hyperparameter names are misleading ⚠️
-# num_layers=trial.suggest_int("num neurons per layer", 2,10)
-
-# This is not neurons per layer.
-
-# It is:
-
-# number of recurrent layers
-
-# Better:
-
-# "num_layers"
-# 6. Your sequence handling is weak ⚠️
-
-# You currently do:
-
-# last_hidden = output[:, -1, :]
-
-# But you use padding.
-
-# So the final token may be padding.
-
-# You should use:
-
-# hidden[-1]
-
-# as discussed before.
-
-# 7. No device handling (CPU/GPU) ⚠️
-
-# You should eventually add:
-
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# and move tensors/models.

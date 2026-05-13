@@ -8,6 +8,7 @@ import config
 import utils
 
 
+print(config.DEVICE)
 
 # print(X_train.shape)
 # print(X_test.shape)

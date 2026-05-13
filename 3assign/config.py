@@ -14,5 +14,7 @@ N_CLASSES: int = 12
 
 #OPTUNA
 optimize_hyperparams: bool = True
-n_trials: int = 1
+n_trials: int = 100
 n_epochs: int = 1
+batch_size: int = 32
+dropout:float = 0.3

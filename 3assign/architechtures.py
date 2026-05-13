@@ -8,16 +8,16 @@ class LSTM_classifier(nn.Module):
         super().__init__()
         self.embedding=embedding
 
-        self.lstm = nn.LSTM(embedding_size,hidden_size, num_layers, batch_first=True)  
+        self.lstm = nn.LSTM(embedding_size,hidden_size, num_layers, batch_first=True,dropout=config.dropout)  
 
         self.fc = nn.Linear(hidden_size, config.N_CLASSES)
 
     def forward(self, x):
         x = self.embedding(x)
 
-        output, hidden = self.lstm(x)
+        output, (hidden, cell) = self.lstm(x)
 
-        last_hidden = output[:, -1, :]
+        last_hidden = hidden[-1]
 
         out = self.fc(last_hidden)
 
@@ -30,7 +30,7 @@ class GRU_classifier(nn.Module):
 
         self.embedding=embedding
 
-        self.gru = nn.GRU(embedding_size,hidden_size, num_layers,batch_first=True)  
+        self.gru = nn.GRU(embedding_size,hidden_size, num_layers,batch_first=True,dropout=config.dropout)  
 
         self.fc = nn.Linear(hidden_size, config.N_CLASSES)
 
@@ -39,7 +39,7 @@ class GRU_classifier(nn.Module):
 
         output, hidden = self.gru(x)
 
-        last_hidden = output[:, -1, :]
+        last_hidden = hidden[-1]
 
         out = self.fc(last_hidden)
 
