@@ -21,9 +21,7 @@ import architechtures
 
 X=pd.read_csv(config.DATA_DIR+"tweet_emotions_X.csv")
 y=pd.read_csv(config.DATA_DIR+"tweet_emotions_y.csv")
-#NO HAY BATCHES; SI QUITAS ESTO MUERE
-X = X.head(200)
-y = y[:200]
+
 
 encoder = LabelEncoder()
 
