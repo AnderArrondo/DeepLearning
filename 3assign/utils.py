@@ -33,7 +33,7 @@ X_train,X_test,y_train,y_test=train_test_split(X,y,test_size=0.2)
 
 
 def objective_function(trial):
-    writer=SummaryWriter(f"runs/{config.STUDY_NAME}")
+    writer=SummaryWriter(f"3assign/runs/{config.STUDY_NAME}")
 
     classifier=None
     classifier_type=trial.suggest_categorical("classifier type", ["LSTM","GRU"])

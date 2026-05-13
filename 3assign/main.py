@@ -17,6 +17,7 @@ print(config.DEVICE)
 
 #OPTUNA
 study_name=input("Enter study name:")
+config.STUDY_NAME=study_name
 
 if config.optimize_hyperparams:
     sampler=optuna.samplers.TPESampler(seed=config.SEED)
@@ -43,3 +44,6 @@ if config.optimize_hyperparams:
             f.write(f"  {key}: {value}\n")
         f.write("-------------")
         f.write("\n\n\n")
+
+print(f"tensorboard --logdir=3assign/runs/{study_name}")
+#tensorboard --logdir=3assign/runs/super_study

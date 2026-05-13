@@ -15,6 +15,6 @@ STUDY_NAME: str = "template_study_name"
 #OPTUNA
 optimize_hyperparams: bool = True
 n_trials: int = 5000
-n_epochs: int = 20
-batch_size: int = 32
+n_epochs: int = 10
+batch_size: int = 256
 dropout:float = 0.3
