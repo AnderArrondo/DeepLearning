@@ -21,7 +21,7 @@ if config.optimize_hyperparams:
     sampler=optuna.samplers.TPESampler(seed=config.SEED)
     pruner=optuna.pruners.MedianPruner(n_startup_trials=10, n_warmup_steps=3)
     study=optuna.create_study(direction="maximize", sampler=sampler, study_name=study_name, pruner=pruner)
-    study.optimize(utils.objective_function,n_trials=config.n_trials,show_progress_bar=True,n_jobs=-1)
+    study.optimize(utils.objective_function,n_trials=config.n_trials,show_progress_bar=True,n_jobs=7)
 
     print(
     f"""\n--- Optimization Finished ---\n

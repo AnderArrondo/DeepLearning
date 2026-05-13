@@ -40,9 +40,12 @@ def objective_function(trial):
     classifier=None
     classifier_type=trial.suggest_categorical("classifier type", ["LSTM","GRU"])
     
-    embedding_size=trial.suggest_int("embedding size",20,300)
-    hidden_size=trial.suggest_int("hidden layer size", 10,30)
-    num_layers=trial.suggest_int("num_layers", 2,10)
+    embedding_size=trial.suggest_int("embedding size",65,256)
+    hidden_size=trial.suggest_int("hidden layer size", 64, 256)
+    num_layers=trial.suggest_int("num_layers", 1,4)
+    learning_rate=trial.suggest_float("lr", 1e-4, 5e-3,log=True)
+    dropout = trial.suggest_float("dropout", 0.1, 0.5)
+
 
     X_tensor, vocab= create_embeddings(X_train["content"], max_length=100)#CREO QUE MAX EN DEL TWEET
     X_tensor=X_tensor.to(config.DEVICE)
@@ -57,7 +60,8 @@ def objective_function(trial):
             embedding,
             embedding_size,
             hidden_size,
-            num_layers
+            num_layers,
+            dropout=dropout
         )
 
     elif classifier_type=="GRU":
@@ -65,7 +69,8 @@ def objective_function(trial):
             embedding,
             embedding_size,
             hidden_size,
-            num_layers)
+            num_layers,
+            dropout=dropout)
     else:
         classifier=None
 
@@ -92,7 +97,6 @@ def objective_function(trial):
 
     y_test_tensor = torch.tensor(y_test).long().to(config.DEVICE)
     criterion = nn.CrossEntropyLoss()
-    learning_rate=trial.suggest_float("lr", 10e-5,10e-2,log=True)
     optimizer = torch.optim.Adam(
         classifier.parameters(),
         lr=learning_rate
@@ -122,7 +126,7 @@ def objective_function(trial):
             epoch_loss += loss.item()
 
         mean_loss = epoch_loss / len(train_loader)
-        writer.add_scalar("Loss/Train", mean_loss)
+        writer.add_scalar("Loss/Train", mean_loss,epoch)
         trial.report(mean_loss, epoch)
 
         if trial.should_prune():
