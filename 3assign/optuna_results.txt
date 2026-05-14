@@ -11,3 +11,18 @@ Best Hyperparameters:
   lr: 0.0007254775804097544
   dropout: 0.4351769782579893
 
+--- study_1000 ---
+
+1000 trials
+
+Best Score: 0.3331
+Best Hyperparameters:
+  classifier type: GRU
+  embedding size: 239
+  hidden layer size: 230
+  num_layers: 1
+  lr: 0.0002481619571280193
+  dropout: 0.42426570763045474
+-------------
+
+
