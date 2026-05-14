@@ -155,7 +155,7 @@ def objective_function(trial):
             all_preds.append(preds.cpu())
 
         y_pred = torch.cat(all_preds)
-        
+
     fold_score = accuracy_score(
     y_test_tensor.cpu().numpy(),
     y_pred.numpy()
@@ -220,19 +220,20 @@ def create_embeddings(texts,vocab=None, max_length=None):
     # ---------------------------------------------------
 
     all_words = []
+    if vocab is None:
 
-    for tokens in tokenized_texts:
-        all_words.extend(tokens)
+        for tokens in tokenized_texts:
+            all_words.extend(tokens)
 
-    counter = Counter(all_words)
+        counter = Counter(all_words)
 
-    vocab = {
-            "<PAD>": 0,
-            "<UNK>": 1
-        }
-    
-    for idx, (word, _) in enumerate(counter.items()):
-        vocab[word] = idx + 2
+        vocab = {
+                "<PAD>": 0,
+                "<UNK>": 1
+            }
+        
+        for idx, (word, _) in enumerate(counter.items()):
+            vocab[word] = idx + 2
 
     # ---------------------------------------------------
     # TEXTO -> ÍNDICES
