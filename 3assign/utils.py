@@ -46,7 +46,6 @@ def objective_function(trial):
 
 
     X_tensor, vocab= create_embeddings(X_train["content"], max_length=100)#CREO QUE MAX EN DEL TWEET
-    X_tensor=X_tensor.to(config.DEVICE)
 
     embedding=nn.Embedding(
         num_embeddings=len(vocab),
@@ -80,9 +79,9 @@ def objective_function(trial):
         vocab=vocab,
         max_length=100
     )
-    X_test_tensor = X_test_tensor.to(config.DEVICE)
+    X_test_tensor = X_test_tensor
 
-    y_train_tensor = torch.tensor(y_train).long().to(config.DEVICE)
+    y_train_tensor = torch.tensor(y_train).long()
     train_dataset = TensorDataset(
         X_tensor,
         y_train_tensor
@@ -94,6 +93,16 @@ def objective_function(trial):
     )
 
     y_test_tensor = torch.tensor(y_test).long().to(config.DEVICE)
+
+    test_dataset = TensorDataset(
+        X_test_tensor,
+        y_test_tensor
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=config.batch_size,
+        shuffle=False
+    )
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(
         classifier.parameters(),
@@ -106,8 +115,10 @@ def objective_function(trial):
 
         classifier.train()
         epoch_loss=0
-        for batch_X, batch_y in train_loader:
 
+        for batch_X, batch_y in train_loader:
+            batch_X = batch_X.to(config.DEVICE)
+            batch_y = batch_y.to(config.DEVICE)
             optimizer.zero_grad()
 
             outputs = classifier(batch_X)
@@ -132,20 +143,31 @@ def objective_function(trial):
         
     classifier.eval()
 
+    all_preds = []
     with torch.no_grad():
+        for batch_X, _ in test_loader:
+            batch_X = batch_X.to(config.DEVICE)
 
-        outputs = classifier(X_test_tensor)
+            outputs = classifier(batch_X)
 
-        y_pred = torch.argmax(
-            outputs,
-            dim=1
-        )
+            preds = torch.argmax(outputs, dim=1)
+
+            all_preds.append(preds.cpu())
+
+        y_pred = torch.cat(all_preds)
+        
     fold_score = accuracy_score(
     y_test_tensor.cpu().numpy(),
-    y_pred.cpu().numpy()
+    y_pred.numpy()
     )
     writer.add_scalar("Accuracy/Test",fold_score,trial.number)
-    
+    writer.close()
+    del classifier
+    del optimizer
+    del outputs
+    del X_test_tensor
+    del X_tensor
+    torch.cuda.empty_cache()
     return fold_score
 
 
