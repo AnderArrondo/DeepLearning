@@ -8,6 +8,7 @@ from config import (
     MODEL, ZERO_SHOT_BATCH_SIZE, DEVICE
 )
 
+import re
 import json
 import torch
 import pandas as pd
@@ -26,13 +27,37 @@ torch.backends.cudnn.benchmark = True
 #######
 # Data collection + splitting
 #######
-X = pd.read_csv(str(DATA_DIR + "tweet_emotions_X.csv"))
-y = pd.read_csv(str(DATA_DIR + "tweet_emotions_y.csv"))["sentiment"]
-candidate_labels = y.unique()
+def clean_tweet(text):
+    text = re.sub(r"http\S+", "http", text)
+    text = re.sub(r"@\w+", "@user", text)
+    return text.strip()
 
-X = X.head(1000)
-y = y.head(1000)
-candidate_labels = y.unique()
+X = pd.read_csv(str(DATA_DIR + "tweet_emotions_X.csv"))
+X["content"] = X["content"].astype(str).apply(clean_tweet)
+
+y = pd.read_csv(str(DATA_DIR + "tweet_emotions_y.csv"))["sentiment"]
+
+label_map = {
+    "sadness":    "a feeling of sadness, sorrow, or unhappiness",
+    "enthusiasm": "enthusiasm, excitement, or eagerness about something",
+    "neutral":    "a neutral, objective, or emotionless tone",
+    "worry":      "worry, concern, or anxious thoughts about something",
+    "surprise":   "surprise, shock, or unexpected discovery",
+    "love":       "love, affection, or deep care for someone or something",
+    "fun":        "fun, playfulness, or lighthearted amusement",
+    "hate":       "hate, strong dislike, or disgust toward something",
+    "happiness":  "happiness, joy, or a positive and cheerful feeling",
+    "boredom":    "boredom, disinterest, or a lack of engagement",
+    "relief":     "relief, comfort, or the lifting of stress or worry",
+    "anger":      "anger, frustration, or strong irritation",
+}
+original_labels = list(label_map.keys())
+candidate_labels = list(label_map.values())
+reverse_map      = {v: k for k, v in label_map.items()}
+
+# X = X.head(1000)
+# y = y.head(1000)
+# candidate_labels = y.unique()
 #######
 # Pipeline
 #######
@@ -48,10 +73,12 @@ for i in tqdm(range(0, len(X), ZERO_SHOT_BATCH_SIZE)):
     results = classifier(
         batch,
         candidate_labels=candidate_labels,
-        batch_size=len(batch)
+        batch_size=len(batch),
+        hypothesis_template="This tweet expresses {}."
     )
     preds.extend([res["labels"][0] for res in results])
 
+preds = [reverse_map[p] for p in preds]
 pred_df = pd.DataFrame({
     "text": X["content"],
     "true": y,
