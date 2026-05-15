@@ -106,7 +106,7 @@ class AlexNet48(nn.Module):
 class TransferVGG16(nn.Module):
     def __init__(self, num_classes=7):
         super().__init__()
-        self.model = models.vgg16(weights=True)
+        self.model = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
         #Change last elem of model for getting the number of final classes we want
         num_features=self.model.classifier[-1].in_features
         self.model.classifier[-1]=nn.Linear(num_features,num_classes)
